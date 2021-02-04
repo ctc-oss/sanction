@@ -5,19 +5,24 @@ use std::str::FromStr;
 use clap::Clap;
 
 use crate::allow::load_allow_list;
+use crate::severity::Severity;
 
 mod allow;
 mod markdown;
 mod severity;
 mod vuln;
 
-/// allowlisting for grype scans
+/// Basic allowlisting and formatting for grype scans
 #[derive(Clap)]
-#[clap(version = "v0.0.0")]
+#[clap(version = "v0.1.0")]
 struct Opts {
     /// Path to allowlist
     #[clap(short('l'), long, default_value = "allow.txt")]
     allowlist: String,
+
+    /// Minimum severity
+    #[clap(short, long)]
+    severity: Option<Severity>,
 
     /// Output mode
     #[clap(short, long, default_value = "remove")]
@@ -46,27 +51,26 @@ impl FromStr for OutputMode {
 
 fn main() {
     let opts: Opts = Opts::parse();
-    println!("mode: {:?}", opts.output);
 
     let f = File::open(opts.allowlist).unwrap();
-    let a = load_allow_list(&f);
-    println!("allowlist contains {} entries", a.len());
+    let l = load_allow_list(&f);
 
     let stdin = io::stdin();
     let grype: vuln::Grype = serde_json::from_reader(stdin).unwrap();
 
-    let pre = grype.matches.len();
+    let sss = opts.severity.unwrap_or(Severity::Unknown);
     let filtered: Vec<&vuln::Match> = grype
         .matches
         .iter()
-        .filter(|v| !a.contains(&v.vulnerability.id))
+        // todo;; improve the structure of the optional logic, for now disable the removal filter
+        //.filter(|m| !l.contains(&m.vulnerability.id))
+        .filter(|m| m.vulnerability.severity >= sss)
         .collect();
-    let post = filtered.len();
-
-    println!("sanctioned {} vulnerabilities", pre - post);
 
     match opts.output {
-        OutputMode::Md => markdown::dump_table(grype.matches, a),
+        OutputMode::Md => {
+            markdown::dump_table(filtered, l)
+        }
         _ => {
             let out = serde_json::to_string_pretty(&filtered).unwrap();
             println!("{}", out);

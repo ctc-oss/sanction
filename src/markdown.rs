@@ -1,6 +1,6 @@
 use crate::vuln::Match;
 
-pub fn dump_table(matches: Vec<Match>, allowlist: Vec<String>) {
+pub fn dump_table(matches: Vec<&Match>, allowlist: Vec<String>) {
     println!("| A | category | package | cve | fix |");
     println!("|---|----------|---------|-----|-----|");
     let empty = String::new();
