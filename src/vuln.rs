@@ -22,5 +22,5 @@ pub struct Vulnerability {
     pub description: String,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub fixed_in_version: Option<String>
+    pub fixed_in_version: Option<String>,
 }
