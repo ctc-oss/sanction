@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -11,6 +13,10 @@ pub struct Grype {
 #[derive(Serialize, Deserialize)]
 pub struct Match {
     pub vulnerability: Vulnerability,
+    pub artifact: Artifact,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allowlist_id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -23,4 +29,16 @@ pub struct Vulnerability {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fixed_in_version: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Artifact {
+    pub name: String,
+    pub version: String,
+}
+
+impl fmt::Display for Artifact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}-{}", self.name, self.version)
+    }
 }

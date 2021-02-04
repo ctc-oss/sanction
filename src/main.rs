@@ -7,6 +7,7 @@ use clap::Clap;
 use crate::allow::load_allow_list;
 
 mod allow;
+mod markdown;
 mod severity;
 mod vuln;
 
@@ -27,6 +28,7 @@ struct Opts {
 enum OutputMode {
     Remove,
     Tag,
+    Md,
 }
 
 impl FromStr for OutputMode {
@@ -36,6 +38,7 @@ impl FromStr for OutputMode {
         match s.to_lowercase().as_str() {
             "remove" => Ok(OutputMode::Remove),
             "tag" => Ok(OutputMode::Tag),
+            "md" => Ok(OutputMode::Md),
             _ => Err(String::from("invalid mode")),
         }
     }
@@ -62,6 +65,11 @@ fn main() {
 
     println!("sanctioned {} vulnerabilities", pre - post);
 
-    let out = serde_json::to_string_pretty(&filtered).unwrap();
-    println!("{}", out)
+    match opts.output {
+        OutputMode::Md => markdown::dump_table(grype.matches, a),
+        _ => {
+            let out = serde_json::to_string_pretty(&filtered).unwrap();
+            println!("{}", out);
+        }
+    }
 }

@@ -1,3 +1,4 @@
+use std::fmt;
 use std::str::FromStr;
 
 use serde::Deserialize;
@@ -26,5 +27,11 @@ impl FromStr for Severity {
             "critical" => Ok(Severity::Critical),
             _ => Err(String::from("invalid severity")),
         }
+    }
+}
+
+impl fmt::Display for Severity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
