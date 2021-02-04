@@ -36,11 +36,10 @@ impl FromStr for OutputMode {
         match s.to_lowercase().as_str() {
             "remove" => Ok(OutputMode::Remove),
             "tag" => Ok(OutputMode::Tag),
-            _ => Err(String::from("invalid mode"))
+            _ => Err(String::from("invalid mode")),
         }
     }
 }
-
 
 fn main() {
     let opts: Opts = Opts::parse();
@@ -54,7 +53,11 @@ fn main() {
     let grype: vuln::Grype = serde_json::from_reader(stdin).unwrap();
 
     let pre = grype.matches.len();
-    let filtered: Vec<&vuln::Match> = grype.matches.iter().filter(|v| !a.contains(&v.vulnerability.id)).collect();
+    let filtered: Vec<&vuln::Match> = grype
+        .matches
+        .iter()
+        .filter(|v| !a.contains(&v.vulnerability.id))
+        .collect();
     let post = filtered.len();
 
     println!("sanctioned {} vulnerabilities", pre - post);

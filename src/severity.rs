@@ -24,7 +24,7 @@ impl FromStr for Severity {
             "medium" => Ok(Severity::Medium),
             "high" => Ok(Severity::High),
             "critical" => Ok(Severity::Critical),
-            _ => Err(String::from("invalid severity"))
+            _ => Err(String::from("invalid severity")),
         }
     }
 }
