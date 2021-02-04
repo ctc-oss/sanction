@@ -31,5 +31,6 @@ $ grype centos:7 -o json | sanction -l test/data/allow.txt
 - [X] parse grype input
 - [X] read allowlist
 - [X] filter vulnerabilities
+- [ ] output markdown
 - [ ] output grype schema
 - [ ] apply tags to grype schema

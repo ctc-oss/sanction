@@ -51,10 +51,14 @@ fn main() {
     println!("allowlist contains {} entries", a.len());
 
     let stdin = io::stdin();
-    let gripes: vuln::Gripes = serde_json::from_reader(stdin).unwrap();
+    let grype: vuln::Grype = serde_json::from_reader(stdin).unwrap();
 
-    let pre = gripes.matches.len();
-    let post = gripes.matches.iter().filter(|v| !a.contains(&v.vulnerability.id)).count();
+    let pre = grype.matches.len();
+    let filtered: Vec<&vuln::Match> = grype.matches.iter().filter(|v| !a.contains(&v.vulnerability.id)).collect();
+    let post = filtered.len();
 
     println!("sanctioned {} vulnerabilities", pre - post);
+
+    let out = serde_json::to_string_pretty(&filtered).unwrap();
+    println!("{}", out)
 }

@@ -1,7 +1,12 @@
 use std::str::FromStr;
 
-#[derive(PartialEq, PartialOrd, Debug)]
-enum Severity {
+use serde::Deserialize;
+use serde::Serialize;
+
+#[derive(Serialize, Deserialize, PartialEq, PartialOrd, Debug)]
+#[serde(rename_all(serialize = "lowercase"))]
+pub enum Severity {
+    Unknown,
     Negligible,
     Low,
     Medium,
