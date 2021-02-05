@@ -3,9 +3,9 @@ use termimad::*;
 use crossterm::style::Color::*;
 
 static HEADER: &str = r#"
-|:-:|:--------:|---------|-----|-----
-|   | category | package | cve | fix |
-|---|----------|---------|-----|-----"#;
+|:--:|:--------:|---------|-----|-----|-----|
+| OK | category | package | cve | fix | ref |
+|:--:|:--------:|---------|-----|-----|-----|"#;
 
 pub fn dump_table(matches: Vec<&Match>, allowlist: Vec<String>) {
     let mut txt: Vec<String> = vec![];
@@ -16,17 +16,24 @@ pub fn dump_table(matches: Vec<&Match>, allowlist: Vec<String>) {
         let f = &m.vulnerability;
         let fix = f.fixed_in_version.as_ref().unwrap_or(&empty);
         let wl = if allowlist.contains(&m.vulnerability.id) {
-            "*X*"
+            "** ✔ **"
         } else {
             ""
         };
-        let cve = match f.links.first() {
-            Some(l) => format!("[{}]({})", f.id, l),
-            None => "N/A".to_string(),
+        let link = match f.links.first() {
+            Some(l) => l,
+            None => &empty,
         };
+        let cve = if allowlist.contains(&f.id) {
+            format!(" ~~ {} ~~ ", f.id)
+        }
+        else {
+            f.id.to_string()
+        };
+
         let row = format!(
-            "| ** {} ** | ~~ {} ~~ | {} | {} | {} |",
-            wl, f.severity, m.artifact, cve, fix
+            "| {} | {} | {} | {} | {} | {} |",
+            wl, f.severity, m.artifact, cve, fix, link
         );
         txt.push(row);
     }
@@ -36,7 +43,8 @@ pub fn dump_table(matches: Vec<&Match>, allowlist: Vec<String>) {
 
     let mut skin = MadSkin::default();
     skin.set_headers_fg(rgb(255, 187, 0));
-    skin.bold.set_fg(Yellow);
+    skin.bold.set_fg(Green);
+    skin.strikeout.set_fg(Grey);
     skin.paragraph.align = Alignment::Center;
     skin.table.align = Alignment::Left;
     println!("{}", skin.term_text(&full));
