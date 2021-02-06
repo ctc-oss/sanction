@@ -1,6 +1,6 @@
 sanction
 ===
-apply allowlist to [grype](https://github.com/anchore/grype) scans
+Apply allowlist to [grype](https://github.com/anchore/grype) scans
 
 ### usage
 

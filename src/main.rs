@@ -27,6 +27,10 @@ struct Opts {
     /// Output mode
     #[clap(short, long, default_value = "remove")]
     output: OutputMode,
+
+    // Pretty printing for markdown and json
+    #[clap(long)]
+    pretty: bool,
 }
 
 #[derive(PartialEq, Debug)]
@@ -67,13 +71,12 @@ fn main() {
         .filter(|m| m.vulnerability.severity >= sss)
         .collect();
 
-    match opts.output {
-        OutputMode::Md => {
-            markdown::dump_table(filtered, l)
-        }
-        _ => {
-            let out = serde_json::to_string_pretty(&filtered).unwrap();
-            println!("{}", out);
-        }
-    }
+    let output = match opts.output {
+        OutputMode::Md if opts.pretty => markdown::pretty_table(filtered, l),
+        OutputMode::Md => markdown::markdown_table(filtered, l),
+        _ if opts.pretty => serde_json::to_string_pretty(&filtered).unwrap(),
+        _ => serde_json::to_string(&filtered).unwrap(),
+    };
+
+    println!("{}", output);
 }
