@@ -6,6 +6,7 @@ use clap::Clap;
 
 use crate::allow::load_allow_list;
 use crate::severity::Severity;
+use std::ops::Deref;
 
 mod allow;
 mod markdown;
@@ -24,19 +25,39 @@ struct Opts {
     #[clap(short, long)]
     severity: Option<Severity>,
 
+    /// Allow mode
+    #[clap(short, long, default_value = "tag")]
+    mode: AllowMode,
+
     /// Output mode
-    #[clap(short, long, default_value = "remove")]
+    #[clap(short, long, default_value = "json")]
     output: OutputMode,
 
-    // Pretty printing for markdown and json
+    /// Pretty printing for markdown and json
     #[clap(long)]
     pretty: bool,
 }
 
 #[derive(PartialEq, Debug)]
-enum OutputMode {
-    Remove,
+enum AllowMode {
     Tag,
+    Remove,
+}
+impl FromStr for AllowMode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "tag" => Ok(AllowMode::Tag),
+            "remove" => Ok(AllowMode::Remove),
+            _ => Err(String::from("invalid allow mode (remove | tag)")),
+        }
+    }
+}
+
+#[derive(PartialEq, Debug)]
+enum OutputMode {
+    Json,
     Md,
 }
 
@@ -45,10 +66,9 @@ impl FromStr for OutputMode {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "remove" => Ok(OutputMode::Remove),
-            "tag" => Ok(OutputMode::Tag),
+            "json" => Ok(OutputMode::Json),
             "md" => Ok(OutputMode::Md),
-            _ => Err(String::from("invalid mode")),
+            _ => Err(String::from("invalid mode (json | md)")),
         }
     }
 }
@@ -62,14 +82,22 @@ fn main() {
     let stdin = io::stdin();
     let grype: vuln::Grype = serde_json::from_reader(stdin).unwrap();
 
-    let sss = opts.severity.unwrap_or(Severity::Unknown);
-    let filtered: Vec<&vuln::Match> = grype
-        .matches
-        .iter()
-        // todo;; improve the structure of the optional logic, for now disable the removal filter
-        //.filter(|m| !l.contains(&m.vulnerability.id))
-        .filter(|m| m.vulnerability.severity >= sss)
+    let min_severity = opts.severity.unwrap_or(Severity::Unknown);
+    let filtered = grype.matches.iter();
+
+    let filtered: Vec<&vuln::Match> = filtered
+        .filter(|m| m.vulnerability.severity >= min_severity)
         .collect();
+
+    let filtered: Vec<&vuln::Match> = if opts.mode == AllowMode::Remove {
+        filtered
+            .iter()
+            .map(|x| x.deref())
+            .filter(|m| !l.contains(&m.vulnerability.id))
+            .collect()
+    } else {
+        filtered.iter().map(|x| x.deref()).collect()
+    };
 
     let output = match opts.output {
         OutputMode::Md if opts.pretty => markdown::pretty_table(filtered, l),
