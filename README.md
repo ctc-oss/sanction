@@ -2,6 +2,8 @@ sanction
 ===
 Apply allowlist to [grype](https://github.com/anchore/grype) scans
 
+![alt](doc/img.png)
+
 ### usage
 
 ```
@@ -9,20 +11,19 @@ sanction v0.1.0
 Basic allowlisting and formatting for grype scans
 
 USAGE:
-    sanction [OPTIONS]
+    sanction [FLAGS] [OPTIONS]
 
 FLAGS:
     -h, --help       Prints help information
+        --pretty     Pretty printing for markdown and json
     -V, --version    Prints version information
 
 OPTIONS:
     -l, --allowlist <allowlist>    Path to allowlist [default: allow.txt]
-    -o, --output <output>          Output mode [default: remove]
+    -m, --mode <mode>              Allow mode [default: tag]
+    -o, --output <output>          Output mode [default: json]
     -s, --severity <severity>      Minimum severity
 ```
-
-![alt](doc/img.png)
-
 
 ### intiial mvp
 - [X] parse grype input
