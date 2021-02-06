@@ -1,4 +1,4 @@
-use crate::vuln::Match;
+use crate::grype::Match;
 use crossterm::style::Color::*;
 use termimad::*;
 

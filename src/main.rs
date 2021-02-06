@@ -9,9 +9,9 @@ use crate::severity::Severity;
 use std::ops::Deref;
 
 mod allow;
+mod grype;
 mod markdown;
 mod severity;
-mod vuln;
 
 /// Basic allowlisting and formatting for grype scans
 #[derive(Clap)]
@@ -80,16 +80,16 @@ fn main() {
     let l = load_allow_list(&f);
 
     let stdin = io::stdin();
-    let grype: vuln::Grype = serde_json::from_reader(stdin).unwrap();
+    let grype: grype::Scan = serde_json::from_reader(stdin).unwrap();
 
     let min_severity = opts.severity.unwrap_or(Severity::Unknown);
     let filtered = grype.matches.iter();
 
-    let filtered: Vec<&vuln::Match> = filtered
+    let filtered: Vec<&grype::Match> = filtered
         .filter(|m| m.vulnerability.severity >= min_severity)
         .collect();
 
-    let filtered: Vec<&vuln::Match> = if opts.mode == AllowMode::Remove {
+    let filtered: Vec<&grype::Match> = if opts.mode == AllowMode::Remove {
         filtered
             .iter()
             .map(|x| x.deref())

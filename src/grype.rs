@@ -6,7 +6,7 @@ use serde::Serialize;
 use super::severity;
 
 #[derive(Serialize, Deserialize)]
-pub struct Grype {
+pub struct Scan {
     pub matches: Vec<Match>,
 }
 
