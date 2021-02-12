@@ -1,26 +1,21 @@
 use std::fs::File;
 use std::io::{self};
+use std::ops::Deref;
 use std::str::FromStr;
 
 use clap::Clap;
+use log::info;
 
-use crate::allow::load_allow_list;
-use crate::severity::Severity;
-use std::ops::Deref;
-
-mod allow;
-mod grype;
-mod markdown;
-mod severity;
+use sanction::allow::{load_allow_list, walk_allowlists};
+use sanction::grype;
+use sanction::markdown;
+use sanction::repo::latest;
+use sanction::severity::Severity;
 
 /// Basic allowlisting and formatting for grype scans
 #[derive(Clap)]
-#[clap(version = "v0.1.0")]
+#[clap(version = "v0.2.0")]
 struct Opts {
-    /// Path to allowlist
-    #[clap(short('l'), long, default_value = "allow.txt")]
-    allowlist: String,
-
     /// Minimum severity
     #[clap(short, long)]
     severity: Option<Severity>,
@@ -36,6 +31,45 @@ struct Opts {
     /// Pretty printing for markdown and json
     #[clap(long)]
     pretty: bool,
+
+    #[clap(subcommand)]
+    source: ListSource,
+}
+
+#[derive(Clap)]
+enum ListSource {
+    /// fapolicyd service commands
+    #[clap(version = "0.0.1")]
+    Git(GitSubOpts),
+    Txt(TxtSubOpts),
+}
+
+/// Git repo allowlist commands
+#[derive(Clap)]
+struct GitSubOpts {
+    /// URL of allowlist repo
+    #[clap()]
+    url: String,
+
+    /// Image name
+    #[clap()]
+    image: String,
+
+    /// File extension of allowlists for globbing
+    #[clap(short, long, default_value = "greylist")]
+    ext: String,
+
+    /// Path to repo
+    #[clap(long)]
+    repodir: Option<String>,
+}
+
+/// Txt file allowlist commands
+#[derive(Clap)]
+struct TxtSubOpts {
+    /// Path to allowlist
+    #[clap()]
+    path: String,
 }
 
 #[derive(PartialEq, Debug)]
@@ -43,6 +77,7 @@ enum AllowMode {
     Tag,
     Remove,
 }
+
 impl FromStr for AllowMode {
     type Err = String;
 
@@ -75,9 +110,23 @@ impl FromStr for OutputMode {
 
 fn main() {
     let opts: Opts = Opts::parse();
+    let allows = match opts.source {
+        ListSource::Txt(opts) => {
+            let f = File::open(opts.path).unwrap();
+            load_allow_list(&f)
+        }
+        ListSource::Git(opts) => {
+            let url = opts.url;
+            let dir = opts.repodir;
+            let (repo, sha) = latest(url.as_str(), &dir).unwrap();
+            info!("using whitelist version {}", sha);
 
-    let f = File::open(opts.allowlist).unwrap();
-    let l = load_allow_list(&f);
+            let name = opts.image;
+            let ext = opts.ext;
+            walk_allowlists(repo.as_str(), name.as_str(), ext.as_str()).unwrap()
+        }
+    };
+    let l: Vec<String> = allows.iter().map(|a| a.id.clone()).collect();
 
     let stdin = io::stdin();
     let grype: grype::Scan = serde_json::from_reader(stdin).unwrap();
