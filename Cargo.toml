@@ -1,6 +1,6 @@
 [package]
 name = "sanction"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["John Wass <wassj@ctc.com>"]
 edition = "2018"
 
@@ -10,3 +10,6 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 termimad = "0.9.5"
 crossterm = "0.17.7"
+git2 = "0.13"
+glob = "0.3.0"
+log = "0.4.11"
