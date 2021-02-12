@@ -1,21 +1,18 @@
 use std::fs::File;
 use std::io::{self};
+use std::ops::Deref;
 use std::str::FromStr;
 
 use clap::Clap;
 
-use crate::allow::load_allow_list;
-use crate::severity::Severity;
-use std::ops::Deref;
-
-mod allow;
-mod grype;
-mod markdown;
-mod severity;
+use sanction::allow::load_allow_list;
+use sanction::grype;
+use sanction::markdown;
+use sanction::severity::Severity;
 
 /// Basic allowlisting and formatting for grype scans
 #[derive(Clap)]
-#[clap(version = "v0.1.0")]
+#[clap(version = "v0.2.0")]
 struct Opts {
     /// Path to allowlist
     #[clap(short('l'), long, default_value = "allow.txt")]
